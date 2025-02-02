@@ -1,0 +1,9 @@
+# 🔹 Virtual environment
+.venv/
+.env
+__pycache__/
+*.pyc
+*.pyo
+.idea
+
+/app/__pycache__
