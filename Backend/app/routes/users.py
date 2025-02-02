@@ -16,7 +16,6 @@ async def get_users(session=Depends(get_session)):
 
 @router.post("/create")
 async def create_user(user: User, session: AsyncSession = Depends(get_session)):
-    print(user)
     session.add(user)
     await session.commit()
     await session.refresh(user)

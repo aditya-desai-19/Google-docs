@@ -1,19 +1,22 @@
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
 from app.helper.authenticate_user import authenticate
+from app.db.models import Document
+from app.db.database import get_session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
 
 router = APIRouter(prefix="/docs", tags=["docs"], dependencies=[Depends(authenticate)])
 
-class Doc(BaseModel):
-    name: str
-
 @router.get("/")
-async def get_docs():
-    return {"message": "list of docs"}
+async def get_docs(session: AsyncSession = Depends(get_session)):
+    result = await session.execute(select(Document))
+    #scalars() fun is used to remove tuple instances and get only Model instances
+    return result.scalars().all()
 
 @router.post("/create")
-async def create_doc(body: Doc):
-    #Todo insert a record in users table
-    print("inside create doc")
-    return body.name
+async def create_doc(doc: Document, session: AsyncSession = Depends(get_session)):
+    session.add(doc)
+    await session.commit()
+    await session.refresh(doc)
+    return doc
 
