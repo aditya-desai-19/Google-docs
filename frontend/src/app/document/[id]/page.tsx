@@ -1,34 +1,30 @@
-"use client"
+"use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Editor, EditorState } from "draft-js";
+import { EditorState } from "draft-js";
+import { Editor } from "react-draft-wysiwyg";
+import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 
 export default function MyEditor() {
-  const [editorState, setEditorState] = useState(() =>
-    EditorState.createEmpty()
-  );
-  const [isClient, setIsClient] = useState(false);
-  const editor = useRef(null);
+	const [editorState, setEditorState] = useState(() =>
+		EditorState.createEmpty()
+	);
+	const [isClient, setIsClient] = useState(false);
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+	useEffect(() => {
+		setIsClient(true);
+	}, []);
 
-  const focusEditor = () => {
-    editor.current?.focus();
-  };
+	console.log({ isClient });
+	if (!isClient) return null; // Prevent rendering during SSR
 
-  console.log({isClient})
-  if (!isClient) return null; // Prevent rendering during SSR
-
-  return (
-    <div onClick={focusEditor} style={{width: "100%", height: "100%", border: "1px solid black"}}>
-      <Editor
-        ref={editor}
-        editorState={editorState}
-        onChange={(editorState) => setEditorState(editorState)}
-        
-      />
-    </div>
-  );
+	return (
+		<div>
+			<header className="App-header">Rich Text Editor Example</header>
+			<Editor
+				editorState={editorState}
+				onEditorStateChange={setEditorState}
+			/>
+		</div>
+	);
 }
