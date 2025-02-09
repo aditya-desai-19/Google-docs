@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@openapitools/openapi-generator-cli": "^2.16.3",
+    "axios": "^1.7.9",
     "cra-template-typescript": "1.2.0",
     "quill": "^2.0.3",
     "react": "^19.0.0",
@@ -13,7 +15,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "gen": "openapi-generator-cli generate -i http://localhost:8000/openapi.json -g typescript-axios -o generated"
   },
   "eslintConfig": {
     "extends": [
@@ -34,6 +37,7 @@
     ]
   },
   "devDependencies": {
-    "@testing-library/react": "^16.2.0"
+    "@testing-library/react": "^16.2.0",
+    "@types/node": "^22.13.1"
   }
 }
