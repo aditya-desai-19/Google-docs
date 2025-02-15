@@ -22,26 +22,25 @@ app.include_router(docs.router)
 async def root(username: Annotated[str, Depends(authenticate)]):
     return {"message": "Hello Aditya"}
 
+rooms = {}
 
-
-clients: List[WebSocket] = []
-
-
-@app.websocket("/ws")
-
-async def websocket_endpoint(websocket: WebSocket):
-
+@app.websocket("/ws/{client_id}")
+async def websocket_endpoint(websocket: WebSocket, client_id: str):
+    print("inisde")
     await websocket.accept()
 
-    clients.append(websocket)
+    if client_id in rooms:
+        rooms[client_id].append(websocket)
+    else:
+        rooms[client_id] = [websocket]
 
+    print(len(rooms[client_id]), rooms[client_id])
     try:
         while True:
             data = await websocket.receive_text()
-            print('len: ', len(clients))
-            for client in clients:
-                if client != websocket:  # Exclude sender
+            for client in rooms[client_id]:
+                if client != websocket:
                     await client.send_text(data)
 
     except WebSocketDisconnect:
-        clients.remove(websocket)
+        rooms[client_id].pop()
