@@ -1,7 +1,13 @@
 import { useCallback, useState } from "react"
-import { Editable, withReact, useSlate, Slate } from "slate-react"
-import { Editor, createEditor } from "slate"
 import styles from "./editor.module.css"
+import { Editable, Slate, withReact } from "slate-react"
+import { createEditor, Descendant, Editor } from "slate"
+
+type LeafType = {
+  attributes: any
+  children: any
+  leaf: any
+}
 
 const initialValue = [
   {
@@ -10,94 +16,7 @@ const initialValue = [
   },
 ]
 
-const RichTextExample = () => {
-  const renderElement = useCallback((props) => <Element {...props} />, [])
-  const renderLeaf = useCallback((props) => <Leaf {...props} />, [])
-  const [editor] = useState(() => withReact(createEditor()))
-
-  return (
-    <div
-      className={styles.editorContainer}
-    >
-      <Slate editor={editor} initialValue={initialValue}>
-        <Toolbar />
-        <Editable
-          renderElement={renderElement}
-          renderLeaf={renderLeaf}
-          placeholder="Enter some rich text…"
-          spellCheck
-          autoFocus
-          className={styles.editor}
-        />
-      </Slate>
-    </div>
-  )
-}
-
-const toggleMark = (editor, format) => {
-  const isActive = isMarkActive(editor, format)
-
-  if (isActive) {
-    Editor.removeMark(editor, format)
-  } else {
-    Editor.addMark(editor, format, true)
-  }
-}
-
-const isMarkActive = (editor, format) => {
-  const marks = Editor.marks(editor)
-  return marks ? marks[format] === true : false
-}
-
-const Element = ({ attributes, children, element }) => {
-  const style = { textAlign: element.align }
-  switch (element.type) {
-    case "block-quote":
-      return (
-        <blockquote style={style} {...attributes}>
-          {children}
-        </blockquote>
-      )
-    case "bulleted-list":
-      return (
-        <ul style={style} {...attributes}>
-          {children}
-        </ul>
-      )
-    case "heading-one":
-      return (
-        <h1 style={style} {...attributes}>
-          {children}
-        </h1>
-      )
-    case "heading-two":
-      return (
-        <h2 style={style} {...attributes}>
-          {children}
-        </h2>
-      )
-    case "list-item":
-      return (
-        <li style={style} {...attributes}>
-          {children}
-        </li>
-      )
-    case "numbered-list":
-      return (
-        <ol style={style} {...attributes}>
-          {children}
-        </ol>
-      )
-    default:
-      return (
-        <p style={style} {...attributes}>
-          {children}
-        </p>
-      )
-  }
-}
-
-const Leaf = ({ attributes, children, leaf }) => {
+const Leaf = ({ attributes, children, leaf }: LeafType) => {
   if (leaf.bold) {
     children = <strong>{children}</strong>
   }
@@ -110,39 +29,76 @@ const Leaf = ({ attributes, children, leaf }) => {
     children = <u>{children}</u>
   }
 
+  if (leaf.h1) {
+    children = <span style={{ fontSize: 20 }}>{children}</span>
+  }
+
   return <span {...attributes}>{children}</span>
 }
 
+//todo 
 const Toolbar = () => {
-  const editor = useSlate()
   return (
     <div className={styles.toolbar}>
-      <button
-        className={styles.toolbarBtn}
-        style={{
-          fontWeight: isMarkActive(editor, "bold") ? "bold" : "normal",
-        }}
-        onMouseDown={(event) => {
-          event.preventDefault()
-          toggleMark(editor, "bold")
-        }}
-      >
-        B
-      </button>
-      <button
-        className={styles.toolbarBtn}
-        style={{
-          fontWeight: isMarkActive(editor, "italic") ? "bold" : "normal",
-        }}
-        onMouseDown={(event) => {
-          event.preventDefault()
-          toggleMark(editor, "italic")
-        }}
-      >
-        I
-      </button>
+      <select title="Font">
+        <option value="ar">Arial</option>
+        <option value="tnr">Times new roman</option>
+      </select>
+      <select title="Font size">
+        <option value="12">12</option>
+        <option value="14">14</option>
+        <option value="16">16</option>
+        <option value="18">18</option>
+      </select>
+      <span title="Bold" className={styles.toolbarBtn}>B</span>
+      <span title="Italics" className={styles.toolbarBtn}>I</span>
+      <span title="Underline" className={styles.toolbarBtn}>U</span>
     </div>
   )
 }
 
-export default RichTextExample
+const CustomEditor = () => {
+  const [editor] = useState(() => withReact(createEditor()))
+  const renderLeaf = useCallback((props: any) => <Leaf {...props} />, [])
+
+  return (
+    <div className={styles.editorContainer}>
+      <Slate editor={editor} initialValue={initialValue}>
+        <Toolbar />
+        <Editable
+          renderLeaf={renderLeaf}
+          className={styles.editor}
+          onKeyDown={(event) => {
+            if (!event.ctrlKey) {
+              return
+            }
+            
+            //create a common function
+            switch (event.key) {
+              case "b": {
+                console.log("inside here")
+                event.preventDefault()
+                Editor.addMark(editor, "bold", true)
+                break
+              }
+
+              case "i": {
+                event.preventDefault()
+                Editor.addMark(editor, "italic", true)
+                break
+              }
+
+              case "u": {
+                event.preventDefault()
+                Editor.addMark(editor, "underline", true)
+                break
+              }
+            }
+          }}
+        />
+      </Slate>
+    </div>
+  )
+}
+
+export default CustomEditor

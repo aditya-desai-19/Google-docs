@@ -1,9 +1,9 @@
-import Editor from "./components/Editor/Editor.tsx"
+import CustomEditor from "./components/Editor/Editor.tsx"
 
 function App() {
   return (
     <>
-      <Editor />
+      <CustomEditor />
     </>
   )
 }
