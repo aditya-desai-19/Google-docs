@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import styles from "./editor.module.css"
 import { Editable, ReactEditor, Slate, withReact } from "slate-react"
-import { BaseEditor, createEditor, Editor } from "slate"
+import { BaseEditor, createEditor, Editor, Transforms } from "slate"
+import { withYjs, YjsEditor, withYHistory } from "@slate-yjs/core"
+import * as Y from "yjs"
+import styles from "./editor.module.css"
+import { HocuspocusProvider } from "@hocuspocus/provider"
 
 type LeafType = {
   attributes: any
@@ -56,7 +59,42 @@ const defaultToolbarStatus: ToolbarStatus = {
 const defaultFontSize: number = 12
 
 const CustomEditor = () => {
-  const [editor] = useState(() => withReact(createEditor()))
+  const provider = useMemo(
+    () =>
+      new HocuspocusProvider({
+        url: 'ws://127.0.0.1:1234',
+        name: 'slate-yjs-demo',
+        connect: false,
+      }),
+    []
+  );
+  
+  const editor = useMemo(() => {
+    const sharedType = provider.document.get('content', Y.XmlText);
+    const e = withReact(withYHistory(withYjs(createEditor(), sharedType)));
+
+    // Ensure editor always has at least 1 valid child
+    const { normalizeNode } = e;
+    e.normalizeNode = (entry) => {
+      const [node] = entry;
+      if (!Editor.isEditor(node) || node.children.length > 0) {
+        return normalizeNode(entry);
+      }
+
+      Transforms.insertNodes(
+        editor,
+        {
+          //@ts-ignore
+          type: 'paragraph',
+          children: [{ text: '' }],
+        },
+        { at: [0] }
+      );
+    };
+
+    return e;
+  }, [provider.document]);
+  
   const [toolbarStatus, setToolbarStatus] =
     useState<ToolbarStatus>(defaultToolbarStatus)
   const [fontSize, setFontSize] = useState<number>(defaultFontSize)
@@ -153,6 +191,18 @@ const CustomEditor = () => {
   useEffect(() => {
     handleFormat(editor, `fontSize${fontSize}`, true)
   }, [fontSize, editor])
+
+  // Connect editor and provider in useEffect to comply with concurrent mode
+  // requirements.
+  useEffect(() => {
+    provider.connect();
+    return () => provider.disconnect();
+  }, [provider]);
+
+  useEffect(() => {
+    YjsEditor.connect(editor);
+    return () => YjsEditor.disconnect(editor);
+  }, [editor]);
 
   return (
     <div className={styles.editorContainer}>
