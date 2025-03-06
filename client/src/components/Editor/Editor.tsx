@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Editable, ReactEditor, Slate, withReact } from "slate-react"
-import { BaseEditor, createEditor, Editor, Transforms } from "slate"
+import { BaseEditor, createEditor, Editor } from "slate"
 import { withYjs, YjsEditor, withYHistory } from "@slate-yjs/core"
 import * as Y from "yjs"
 import styles from "./editor.module.css"
@@ -22,7 +22,7 @@ type ToolbarStatus = {
 const initialValue = [
   {
     type: "paragraph",
-    children: [{ text: "A line of text in a paragraph." }],
+    children: [{ text: "" }],
   },
 ]
 
@@ -39,7 +39,30 @@ const Leaf = ({ attributes, children, leaf }: LeafType) => {
     children = <u>{children}</u>
   }
 
-  return <span {...attributes}>{children}</span>
+  const getFontSize = () => {
+    if(leaf.fontSize18) {
+      return 18
+    }
+    else if(leaf.fontSize16) {
+      return 16
+    }
+    else if(leaf.fontSize14) {
+      return 14
+    }
+    return 12
+  }
+
+  const getFontFamily = () => {
+    if(leaf.Oswald) {
+      return "Oswald"
+    }
+    else if(leaf.Roboto) {
+      return "Roboto"
+    }
+    return "Montserrat"
+  }
+
+  return <span {...attributes} style={{fontSize: getFontSize(), fontFamily: getFontFamily()}}>{children}</span>
 }
 
 const handleFormat = (
@@ -50,17 +73,23 @@ const handleFormat = (
   Editor.addMark(editor, format, isActive)
 }
 
-//todo
 const defaultToolbarStatus: ToolbarStatus = {
   isActiveBold: false,
   isActiveItalic: false,
   isActiveUnderline: false,
 }
 
-const defaultFontSize: number = 12
+const fontSizes = ['12', '14', '16', '18']
+const fontFamilies = ['Roboto', 'Oswald', 'Montserrat']
+
+const defaultFontSize = "12"
+const defaultFontFamily = 'Montserrat'
 
 const CustomEditor = () => {
   const { id } = useParams()
+  const [toolbarStatus, setToolbarStatus] = useState<ToolbarStatus>(defaultToolbarStatus)
+  const [fontSize, setFontSize] = useState<string>(defaultFontSize)
+  const [fontFamily, setFontFamily] = useState<string>(defaultFontFamily)
 
   const provider = useMemo(() => {
     const doc = new Y.Doc()
@@ -84,24 +113,18 @@ const CustomEditor = () => {
       if (!Editor.isEditor(node) || node.children.length > 0) {
         return normalizeNode(entry)
       }
-
-      Transforms.insertNodes(
-        editor,
-        {
-          //@ts-ignore
-          type: "paragraph",
-          children: [{ text: "" }],
-        },
-        { at: [0] }
-      )
     }
 
     return e
   }, [provider.document])
 
-  const [toolbarStatus, setToolbarStatus] =
-    useState<ToolbarStatus>(defaultToolbarStatus)
-  const [fontSize, setFontSize] = useState<number>(defaultFontSize)
+  const renderElement = useCallback(({ attributes, children, element }: { attributes: any, children: any, element: any }) => {
+    switch (element.type) {
+      
+      default:
+        return <p {...attributes}>{children}</p>
+    }
+  }, []) 
 
   const renderLeaf = useCallback((props: any) => <Leaf {...props} />, [])
 
@@ -140,25 +163,36 @@ const CustomEditor = () => {
 
   const changeFontSize = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
-      setFontSize(parseInt(e.target.value))
+      const newFontSize = e.target.value
+      handleFormat(editor, `fontSize${fontSize}`, false)
+      handleFormat(editor, `fontSize${newFontSize}`, true)
+      setFontSize(newFontSize)
     },
-    []
+    [handleFormat, fontSize]
+  )
+
+  const changeFontFamily = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const newFontFamily = e.target.value
+      handleFormat(editor, fontFamily, false)
+      handleFormat(editor, newFontFamily, true)
+      setFontFamily(newFontFamily)
+    },
+    [handleFormat, fontFamily]
   )
 
   const MemonizedToolbar = useMemo(() => {
     return (
       <div className={styles.toolbar}>
-        {/* todo */}
-        <select title="Font">
-          <option value="ar">Arial</option>
-          <option value="tnr">Times new roman</option>
+        <select title="Font" className={styles.toolbarDropdown} value={fontFamily} onChange={changeFontFamily}>
+          {fontFamilies.map(fm => (
+            <option value={fm} key={fm}>{fm}</option>
+          ))}
         </select>
-        {/* todo */}
-        <select title="Font size" value={fontSize} onChange={changeFontSize}>
-          <option value="12">12</option>
-          <option value="14">14</option>
-          <option value="16">16</option>
-          <option value="18">18</option>
+        <select title="Font size" className={styles.toolbarDropdown} value={fontSize} onChange={changeFontSize}>
+          {fontSizes.map((fz) =>
+            <option value={fz} key={fz}>{fz}</option>
+          )}
         </select>
         <span
           title="Bold"
@@ -190,14 +224,8 @@ const CustomEditor = () => {
         </span>
       </div>
     )
-  }, [toolbarStatus, fontSize])
+  }, [toolbarStatus, fontSize, fontFamily])
 
-  useEffect(() => {
-    handleFormat(editor, `fontSize${fontSize}`, true)
-  }, [fontSize, editor])
-
-  // Connect editor and provider in useEffect to comply with concurrent mode
-  // requirements.
   useEffect(() => {
     provider.connect()
     return () => provider.disconnect()
@@ -213,6 +241,7 @@ const CustomEditor = () => {
       <Slate editor={editor} initialValue={initialValue}>
         {MemonizedToolbar}
         <Editable
+          renderElement={renderElement}
           renderLeaf={renderLeaf}
           className={styles.editor}
           onKeyDown={(event) => {

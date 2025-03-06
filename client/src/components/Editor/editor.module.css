@@ -8,7 +8,7 @@
 .editor {
   width: 60%;
   height: 80%;
-  border: 1px solid black;
+  border: 1px solid gainsboro;
 }
 
 .toolbar {
@@ -17,10 +17,10 @@
   padding-bottom: 10px;
   margin-top: 10px;
   margin-bottom: 10px;
-  background-color: #f0f4f9;;
+  background-color: #f0f4f9;
 }
 
-.toolbarBtn {
+.toolbarBtn, .toolbarDropdown {
   margin-left: 10px;
   margin-right: 10px;
   cursor: pointer;
