@@ -3,7 +3,7 @@ import { Editable, ReactEditor, Slate, withReact } from "slate-react"
 import { BaseEditor, createEditor, Editor } from "slate"
 import { withYjs, YjsEditor, withYHistory } from "@slate-yjs/core"
 import * as Y from "yjs"
-import styles from "./editor.module.css"
+import styles from "./CustomEditor.module.css"
 import { HocuspocusProvider } from "@hocuspocus/provider"
 import { useParams } from "react-router"
 
@@ -95,7 +95,7 @@ const CustomEditor = () => {
     const doc = new Y.Doc()
 
     return new HocuspocusProvider({
-      url: "ws://127.0.0.1:1234",
+      url: import.meta.env.VITE_SERVER_URL,
       name: id || "demo",
       connect: false,
       document: doc,
@@ -136,7 +136,7 @@ const CustomEditor = () => {
         isActiveBold: !toolbarStatus.isActiveBold,
       })
     },
-    [toolbarStatus.isActiveBold]
+    [toolbarStatus]
   )
 
   const handleItalic = useCallback(
@@ -144,21 +144,21 @@ const CustomEditor = () => {
       handleFormat(editor, "italic", !toolbarStatus.isActiveItalic)
       setToolbarStatus({
         ...toolbarStatus,
-        isActiveBold: !toolbarStatus.isActiveItalic,
+        isActiveItalic: !toolbarStatus.isActiveItalic,
       })
     },
-    [toolbarStatus.isActiveItalic]
+    [toolbarStatus]
   )
 
   const handleUnderline = useCallback(
     (editor: BaseEditor & ReactEditor) => {
-      handleFormat(editor, "italic", !toolbarStatus.isActiveUnderline)
+      handleFormat(editor, "underline", !toolbarStatus.isActiveUnderline)
       setToolbarStatus({
         ...toolbarStatus,
-        isActiveBold: !toolbarStatus.isActiveUnderline,
+        isActiveUnderline: !toolbarStatus.isActiveUnderline,
       })
     },
-    [toolbarStatus.isActiveUnderline]
+    [toolbarStatus]
   )
 
   const changeFontSize = useCallback(
@@ -180,7 +180,7 @@ const CustomEditor = () => {
     },
     [handleFormat, fontFamily]
   )
-
+  
   const MemonizedToolbar = useMemo(() => {
     return (
       <div className={styles.toolbar}>
@@ -197,7 +197,10 @@ const CustomEditor = () => {
         <span
           title="Bold"
           className={styles.toolbarBtn}
-          style={{ fontWeight: toolbarStatus.isActiveBold ? "bold" : "normal" }}
+          style={{ 
+            color: toolbarStatus.isActiveBold ?  "black" : "white",
+            fontWeight: toolbarStatus.isActiveBold ? "bold" : "normal"
+          }}
           onClick={() => handleBold(editor)}
         >
           B
@@ -206,6 +209,7 @@ const CustomEditor = () => {
           title="Italics"
           className={styles.toolbarBtn}
           style={{
+            color: toolbarStatus.isActiveItalic ?  "black" : "white",
             fontWeight: toolbarStatus.isActiveItalic ? "bold" : "normal",
           }}
           onClick={() => handleItalic(editor)}
@@ -216,6 +220,7 @@ const CustomEditor = () => {
           title="Underline"
           className={styles.toolbarBtn}
           style={{
+            color: toolbarStatus.isActiveUnderline ?  "black" : "white",
             fontWeight: toolbarStatus.isActiveUnderline ? "bold" : "normal",
           }}
           onClick={() => handleUnderline(editor)}
@@ -249,7 +254,6 @@ const CustomEditor = () => {
               return
             }
 
-            //create a common function
             switch (event.key) {
               case "b": {
                 event.preventDefault()

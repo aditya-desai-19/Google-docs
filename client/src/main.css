@@ -5,10 +5,10 @@ body {
   padding: 0;
 }
 
-/* use viewport-relative units to cover page fully */
 body {
   height: 100vh;
   width: 100vw;
+  background-color: #F7F7F7;
 }
 
 #root {

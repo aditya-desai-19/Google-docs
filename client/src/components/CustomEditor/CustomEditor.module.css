@@ -9,6 +9,11 @@
   width: 60%;
   height: 80%;
   border: 1px solid gainsboro;
+  background-color: white;
+}
+
+.editor:focus {
+  border: 0;
 }
 
 .toolbar {
@@ -17,7 +22,7 @@
   padding-bottom: 10px;
   margin-top: 10px;
   margin-bottom: 10px;
-  background-color: #f0f4f9;
+  background-color: #7E99A3;
 }
 
 .toolbarBtn, .toolbarDropdown {
@@ -25,3 +30,4 @@
   margin-right: 10px;
   cursor: pointer;
 }
+
