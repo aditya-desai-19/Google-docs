@@ -1,8 +1,7 @@
 ![project](https://github.com/user-attachments/assets/c3a9265c-0a6a-4f2c-94ff-ab0809f521b5)
 
-# Online Code Editor
-Online code editor
- is a web application built using React, Slate.js and hocuspocus websocket server.
+# Online Text Editor
+Online text editor is a web application built using React, Slate.js and hocuspocus websocket server.
 
 ## Features
     
